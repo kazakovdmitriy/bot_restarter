@@ -3,6 +3,19 @@ REMOTE_HOST ?= your-server
 REMOTE_USER ?= root
 REMOTE_DIR ?= /opt/bot-restarter
 
+.PHONY: test
+test:
+	go test -race -count=1 ./...
+
+.PHONY: test-cover
+test-cover:
+	go test -race -count=1 -coverprofile=coverage.out ./...
+	go tool cover -func=coverage.out
+
+.PHONY: lint
+lint:
+	go vet ./...
+
 .PHONY: build
 build:
 	GOOS=linux GOARCH=amd64 go build -o $(BINARY) .
