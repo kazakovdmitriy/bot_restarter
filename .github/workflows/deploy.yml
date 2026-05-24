@@ -15,21 +15,14 @@ jobs:
           go-version: "1.21"
 
       - name: Build
-        run: GOOS=linux GOARCH=amd64 go build -o bot-restarter .
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bot-restarter .
 
-      - name: Deploy to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          source: bot-restarter
-          target: /opt/bot-restarter/
-
-      - name: Restart service
-        uses: appleboy/ssh-action@v1.2.2
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          script: systemctl restart bot-restarter
+      - name: Deploy
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "rm -f /opt/bot-restarter/bot-restarter"
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no bot-restarter ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/bot-restarter/
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "chmod +x /opt/bot-restarter/bot-restarter && sudo /usr/bin/systemctl restart bot-restarter && sleep 2 && sudo /usr/bin/systemctl status bot-restarter --no-pager"
+          rm -f ~/.ssh/deploy_key
