@@ -1,2 +1,4 @@
 bot-restarter
 config.json
+*.local
+.DS_Store
