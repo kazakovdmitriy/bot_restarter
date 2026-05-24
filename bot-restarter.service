@@ -1,0 +1,14 @@
+[Unit]
+Description=Bot Restarter
+After=network.target
+
+[Service]
+Type=simple
+User=botuser
+WorkingDirectory=/opt/bot-restarter
+ExecStart=/opt/bot-restarter/bot-restarter
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
